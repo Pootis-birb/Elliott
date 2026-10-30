@@ -5,13 +5,14 @@ const PORT = process.env.PORT || 3000;
 
 // MULTI-MONITOR ROUTING MATRIX
 const KUMA_MONITORS = {
-    // Pulls the verified link from your Render Environment Dashboard dynamically
+    // If you keep ngrok, use the environment variable. When you transition to Cloudflare, paste your domain URL here
     "device1": process.env.UPTIME_KUMA_URL || "https://veggie-smudge-cancel.ngrok-free.dev/api/push/5dOvp8OCl9?status=up&msg=OK&ping=",
-    "device2": "https://ngrok-free.dev"
+    "device2": "https://yourdomain.com"
 };
 
 app.get('/ping', async (req, res) => {
-    const monitorId = req.query.id || "device1"; 
+    // FIXED: Reads 'device' directly to perfectly match your ESP32's URL string
+    const monitorId = req.query.device || "device1"; 
     const kumaUrl = KUMA_MONITORS[monitorId];
 
     if (!kumaUrl) {
@@ -20,17 +21,23 @@ app.get('/ping', async (req, res) => {
     }
 
     try {
-        // FIXED: Added the required skip header object to bypass ngrok's warning page
+        // Handshake delivery to the network tunnel link
         await axios.get(kumaUrl, {
             headers: {
-                'ngrok-skip-browser-warning': 'true'
-            }
+                'ngrok-skip-browser-warning': 'true',
+                'User-Agent': 'ESP32-Cloud-Bridge-Relay'
+            },
+            timeout: 10000 // Prevents Render from hanging indefinitely if your home pipeline stalls
         });
+        
         console.log(`Successfully routed ping for: ${monitorId}`);
         res.status(200).send(`Forwarded successfully for ${monitorId}`);
     } catch (error) {
         console.error(`Network pipeline error for ${monitorId}:`, error.message);
-        res.status(500).send("Error forwarding signal down the ngrok tunnel");
+        
+        // UPGRADED HANDLER: Instead of throwing a 500 crash code, return a friendly 503 fallback.
+        // This alerts your ESP32 code's custom handler that the backend path is just sleeping or offline
+        res.status(503).send(`Bridge endpoint target (${monitorId}) is unreachable. Server may be offline.`);
     }
 });
 
