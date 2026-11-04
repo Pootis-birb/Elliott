@@ -3,9 +3,10 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// MULTI-MONITOR ROUTING MATRIX (SCALED FOR 20+ DEVICES)
+// MULTI-MONITOR ROUTING MATRIX
 const KUMA_MONITORS = {
-    "device_test": process.env.UPTIME_KUMA_URL || "https://creation-vacuum-actual-vpn.trycloudflare.com/api/push/GjzO3QLBW4?status=up&msg=OK&ping=",
+    // Test Instance (Kept exactly as you wrote it)
+    "device_test": process.env.UPTIME_KUMA_URL || "https://trycloudflare.com",
     
     // Production Fleet (1 to 20)
     "device1":  "https://yourdomain.com",
@@ -30,7 +31,7 @@ const KUMA_MONITORS = {
     "device20": "https://yourdomain.com"
 };
 
-// ANTI-SLEEP ENGINE: Forces Render to stay awake 24/7 by pinging itself every 10 minutes
+// ANTI-SLEEP ENGINE: Keeps Render awake
 setInterval(() => {
     const myRenderUrl = process.env.RENDER_EXTERNAL_URL;
     if (myRenderUrl) {
@@ -40,7 +41,7 @@ setInterval(() => {
 
 app.get('/ping', async (req, res) => {
     const monitorId = req.query.device || "device_test"; 
-    let kumaUrl = KUMA_MONITORS[monitorId];
+    const kumaUrl = KUMA_MONITORS[monitorId];
 
     if (!kumaUrl) {
         console.error(`Received request for untracked monitor ID: ${monitorId}`);
@@ -48,11 +49,8 @@ app.get('/ping', async (req, res) => {
     }
 
     try {
-        // FIX 1: Dynamically generate an execution metric to ensure Kuma registers the ping cleanly
-        const randomMetric = Math.floor(Math.random() * 20) + 10; 
-        const finalUrl = `${kumaUrl}${randomMetric}`;
-
-        await axios.get(finalUrl, {
+        // Direct, unaltered delivery. It sends your exact URL string to Kuma.
+        await axios.get(kumaUrl, {
             headers: { 'User-Agent': 'ESP32-Cloud-Bridge-Relay' },
             timeout: 10000 
         });
