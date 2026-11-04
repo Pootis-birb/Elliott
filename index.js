@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 // MULTI-MONITOR ROUTING MATRIX (SCALED FOR 20+ DEVICES)
 const KUMA_MONITORS = {
     // Test Instance
-    "device_test": process.env.UPTIME_KUMA_URL || "https://yourdomain.com",
+    "device_test": process.env.UPTIME_KUMA_URL || "https://creation-vacuum-actual-vpn.trycloudflare.com/api/push/GjzO3QLBW4?status=up&msg=OK&ping=",
 
     // Production Fleet (1 to 20)
     // Replace 'tokenX' with your unique Uptime Kuma Push Monitor tokens
